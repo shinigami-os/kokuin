@@ -14,15 +14,16 @@ import qs.services
 //   Alt+1…6 or Alt+←→ change page · F5 reads the boot again · Ctrl+Q leaves
 // KOKUIN_CLI=/path/to/kokuin-cli picks the CLI to use; KOKUIN_REDUCE_MOTION=1 turns the motion off.
 ShellRoot {
+    Binding { target: Theme; property: "accent"; value: Accent.accent }
     Binding { target: Anim; property: "reduce"; value: Quickshell.env("KOKUIN_REDUCE_MOTION") === "1" }
 
     FloatingWindow {
         id: win
 
         title: "Kokuin"
-        implicitWidth: 1280
-        implicitHeight: 800
-        minimumSize: Qt.size(960, 600)
+        implicitWidth: 1100
+        implicitHeight: 700
+        minimumSize: Qt.size(820, 520)
         color: Theme.surface
         visible: true
 
@@ -34,7 +35,7 @@ ShellRoot {
             Binding {
                 target: Theme
                 property: "scale"
-                value: Math.max(0.8, Math.min(1.6, stage.height / 800, stage.width / 1280))
+                value: Math.max(0.7, Math.min(1.4, stage.height / 800, stage.width / 1280) * 0.82)
             }
 
             Component.onCompleted: Boot.open("", "This boot")
