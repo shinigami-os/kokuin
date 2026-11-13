@@ -1,0 +1,3 @@
+#!/bin/sh
+# Opens kokuin. KOKUIN_CLI=/path/to/kokuin-cli picks the CLI to read boots with.
+exec qs -p "${KOKUIN_DIR:-/usr/share/kokuin}" "$@"

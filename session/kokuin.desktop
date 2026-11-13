@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Kokuin
+Comment=See how this machine boots, from the power button to the desktop
+Exec=kokuin
+Icon=utilities-system-monitor
+Categories=System;Monitor;
+Terminal=false
+StartupWMClass=kokuin
