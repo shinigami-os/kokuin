@@ -21,6 +21,11 @@ PageFrame {
         }
     }
 
+    // What the last status said (null until it is read: then nothing can be pressed).
+    readonly property var rec: Recorder.recorder
+    readonly property bool uefi: Recorder.recorder?.uefi ?? false
+    readonly property bool probeHere: rec?.probe_entry !== null && rec?.probe_entry !== undefined
+
     component Action: Column {
         id: act
 
@@ -30,6 +35,8 @@ PageFrame {
         property string verb
         property bool danger: false
         property bool enabled: true
+        // why it can't be pressed now, shown under its description
+        property string unavailable: ""
 
         width: parent ? parent.width : 0
         spacing: Theme.u(8)
@@ -47,6 +54,15 @@ PageFrame {
             color: Theme.muted
             font.family: Theme.fontUi
             font.pixelSize: Theme.u(13)
+        }
+        Text {
+            visible: !act.enabled && act.unavailable !== ""
+            width: parent.width
+            wrapMode: Text.WordWrap
+            text: act.unavailable
+            color: Theme.accent
+            font.family: Theme.fontMono
+            font.pixelSize: Theme.u(12)
         }
         Row {
             spacing: Theme.u(12)
@@ -132,6 +148,8 @@ PageFrame {
                     about: "Adds kokuin-init to the kernel command line, so each boot is recorded from the start."
                     args: ["enable"]
                     verb: "recording every boot"
+                    enabled: page.rec !== null && page.rec.installed && !page.rec.enabled
+                    unavailable: page.rec === null ? "Reading…" : !page.rec.installed ? "kokuin-init is not installed." : "Already recording every boot."
                 }
                 Action {
                     name: "Stop recording"
@@ -139,12 +157,16 @@ PageFrame {
                     args: ["disable"]
                     verb: "stopping the recorder"
                     danger: true
+                    enabled: page.rec !== null && page.rec.enabled === true
+                    unavailable: page.rec === null ? "Reading…" : "It is not recording."
                 }
                 Action {
                     name: "Deep boot"
                     about: "Records the next boot only, with kernel tracing: the time of each kernel init function and every program, even the shortest. It disarms itself afterwards."
                     args: ["deep"]
                     verb: "arming a deep boot"
+                    enabled: page.rec !== null && page.rec.installed && !page.rec.deep_armed
+                    unavailable: page.rec === null ? "Reading…" : !page.rec.installed ? "kokuin-init is not installed." : "Already armed for the next boot."
                 }
                 Action {
                     name: "Cancel deep boot"
@@ -152,6 +174,7 @@ PageFrame {
                     args: ["deep", "--cancel"]
                     verb: "cancelling the deep boot"
                     enabled: Recorder.recorder?.deep_armed ?? false
+                    unavailable: "No deep boot is armed."
                 }
             }
 
@@ -173,18 +196,27 @@ PageFrame {
                     about: "Puts the probe on the EFI system partition, with a boot entry of its own."
                     args: ["probe", "install"]
                     verb: "installing the probe"
+                    enabled: page.rec !== null && page.uefi && !(page.rec.secure_boot ?? false) && (page.rec.probe_available ?? false) && !page.probeHere
+                    unavailable: page.rec === null ? "Reading…" : !page.uefi ? "This system did not boot through UEFI."
+                        : (page.rec.secure_boot ?? false) ? "Secure Boot is on: the unsigned probe cannot run."
+                        : !(page.rec.probe_available ?? false) ? "The probe file is not on this system (reinstall kira-kokuin-cli)."
+                        : "The probe is already installed."
                 }
                 Action {
                     name: "Arm the probe"
                     about: "Makes the next boot, and only it, go through the probe."
                     args: ["probe", "arm"]
                     verb: "arming the probe"
+                    enabled: page.probeHere && !(page.rec?.probe_armed ?? false)
+                    unavailable: page.rec === null ? "Reading…" : !page.probeHere ? "Install the probe first." : "Already armed for the next boot."
                 }
                 Action {
                     name: "Disarm the probe"
                     about: "Undoes arming before you reboot."
                     args: ["probe", "disarm"]
                     verb: "disarming the probe"
+                    enabled: page.rec?.probe_armed ?? false
+                    unavailable: "The probe is not armed."
                 }
                 Action {
                     name: "Remove the probe"
@@ -192,6 +224,8 @@ PageFrame {
                     args: ["probe", "remove"]
                     verb: "removing the probe"
                     danger: true
+                    enabled: page.probeHere
+                    unavailable: page.rec === null ? "Reading…" : "The probe is not installed."
                 }
             }
 
